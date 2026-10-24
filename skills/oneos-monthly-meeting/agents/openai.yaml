@@ -1,7 +1,7 @@
 interface:
   display_name: "ONEOS 每月例会"
-  short_description: "从零散材料生成同风格例会 PPT、脱敏截图、女声配音与 4K 视频"
+  short_description: "按月份自动归集云效进展，将提供的下月计划编为里程碑，生成 PPT 与配音视频"
   brand_color: "#006E49"
-  default_prompt: "使用 $oneos-monthly-meeting，把我提供的材料整理成本月例会 PPT、配音和视频，沿用既有风格并自动控制篇幅、打码敏感截图。"
+  default_prompt: "使用 $oneos-monthly-meeting，确认汇报月份后自动读取云效迭代；用我提供的下月计划拆成三个上线里程碑，按目录分模块生成领导简报 PPT、配音和视频。语音称系统，敏感截图自动打码放右侧。"
 policy:
   allow_implicit_invocation: true

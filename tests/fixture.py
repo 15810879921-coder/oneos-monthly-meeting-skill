@@ -27,12 +27,12 @@ def create_fixture(root):
     phone_image.save(phone)
     manifest = {"title": "虚构项目月度演示", "month": "演示月份", "date": "2026年10月", "content_reviewed": True, "narration_reviewed": True,
                 "slides": [
-                    {"kind": "cover", "title": "虚构项目\n月度演示", "subtitle": "纯合成测试素材", "narration": "虚构演示。"},
-                    {"kind": "contents", "title": "汇报目录", "bullets": ["演示成果", "后续安排"]},
-                    {"kind": "content", "title": "演示流程已验证", "status": "合成样例", "bullets": ["演示材料经过脱敏处理。", "截图保持完整比例展示。"], "narration": "流程演示。", "screenshot": {"path": source.name, "reviewed": True, "image_sha256": hashlib.sha256(source.read_bytes()).hexdigest(), "redactions": [[65, 160, 400, 70]]}},
-                    {"kind": "chapter", "title": "演示成果", "chapter_number": 1, "narration": "演示成果。"},
+                    {"kind": "cover", "title": "ONEOS 虚构项目\n月度演示", "subtitle": "纯合成测试素材", "narration": "下面汇报 ONEOS 的进展。"},
+                    {"kind": "contents", "title": "汇报目录", "bullets": ["重点建设", "运行情况", "下月目标"]},
+                    {"kind": "content", "chapter_number": 1, "title": "演示流程已验证", "status": "合成样例", "bullets": ["演示材料经过脱敏处理。", "截图保持完整比例展示。"], "narration": "流程演示。", "screenshot": {"path": source.name, "reviewed": True, "image_sha256": hashlib.sha256(source.read_bytes()).hexdigest(), "redactions": [[65, 160, 400, 70]]}},
+                    {"kind": "chapter", "title": "运行情况", "chapter_number": 2, "narration": "运行情况。"},
                     {"kind": "metrics", "title": "虚构指标结果", "status": "仅供样例验收", "metrics": [{"value": "2", "label": "演示事项", "note": "虚构数据，用于验证大数字版式。"}], "narration": "指标演示。", "screenshot": {"path": phone.name, "layout": "phone", "reviewed": True, "image_sha256": hashlib.sha256(phone.read_bytes()).hexdigest(), "redactions": [[15, 160, 320, 70]]}},
-                    {"kind": "plan", "title": "后续演示安排", "status": "虚构计划", "bullets": ["整理演示反馈。", "复核生成材料。"], "narration": "计划演示。"},
+                    {"kind": "plan", "chapter_number": 3, "title": "下月分三批上线", "status": "虚构计划，仅验证版式", "bullets": ["第一批：上线示例模块甲，支持登记。", "第二批：上线示例模块乙，支持查询。", "第三批：上线示例模块丙，支持统计。"], "narration": "计划演示。"},
                     {"kind": "closing", "title": "感谢聆听", "subtitle": "纯合成测试，不代表实际业务结果", "narration": "谢谢。"}]}
     path = root / "manifest.json"
     path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")

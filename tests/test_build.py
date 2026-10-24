@@ -111,6 +111,42 @@ class SafetyTests(unittest.TestCase):
                 with self.assertRaisesRegex(build.BuildError, "超出版面安全区"):
                     renderer.render(slide, 5, data, shot)
 
+    def test_brand_spoken_alias_preserves_visual_title(self):
+        self.data["slides"][0]["narration"] = "ONEOS、oneos、One OS 本月进展。"
+        self.path.write_text(json.dumps(self.data))
+        data = build.load_manifest(self.path)
+        self.assertEqual(data["slides"][0]["narration"], "系统、系统、系统 本月进展。")
+        self.assertIn("ONEOS", data["slides"][0]["title"])
+        sent = []
+        async def capture(text, dest):
+            sent.append(text)
+            dest.write_bytes(b"test")
+        with patch.object(build, "tts", capture), patch.object(build, "probe", return_value={"format":{"duration":"1.0"}}), patch.object(build, "run"):
+            build.audio_page(self.data["slides"][0], self.root/"audio.wav", False, .55)
+        self.assertEqual(sent, [data["slides"][0]["narration"]])
+
+    def test_chapter_inheritance_and_not_physical_page(self):
+        data = build.load_manifest(self.path)
+        self.assertEqual([s.get("_chapter_number") for s in data["slides"]], [None,None,1,2,2,3,None])
+        self.assertEqual(data["slides"][4]["_chapter_title"], "运行情况")
+
+    def test_chapter_mismatch_and_missing_or_out_of_order_sections_fail(self):
+        self.reject(lambda m: m["slides"][3].pop("chapter_number"), "章节页须明确")
+        self.data["slides"][3]["chapter_number"] = 2
+        self.reject(lambda m: m["slides"][3].update(title="错误目录标题"), "目录一致")
+        self.data["slides"][3]["title"] = "运行情况"
+        self.reject(lambda m: m["slides"][5].update(chapter_number=1), "章节顺序")
+        self.data["slides"][5]["chapter_number"] = 3
+        self.reject(lambda m: m["slides"][2].pop("chapter_number"), "正文须指定")
+
+    def test_script_and_narration_fingerprint_match_spoken_text(self):
+        qa = build.build(self.path, self.root/"draft", no_audio=True, skip_video=True)
+        script = (self.root/"draft/DRAFT-script.md").read_text()
+        self.assertIn("下面汇报 系统 的进展。", script)
+        import hashlib
+        expected = hashlib.sha256("下面汇报 系统 的进展。".encode()).hexdigest()
+        self.assertEqual(qa["slides"][0]["narration_sha256"], expected)
+
 
 if __name__ == "__main__":
     unittest.main()

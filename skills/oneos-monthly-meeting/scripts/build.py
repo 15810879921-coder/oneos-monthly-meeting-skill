@@ -10,6 +10,7 @@ import json
 import math
 import os
 import platform
+import re
 import shutil
 import subprocess
 import sys
@@ -38,6 +39,47 @@ NS = {"p": "http://schemas.openxmlformats.org/presentationml/2006/main",
 
 class BuildError(ValueError):
     pass
+
+
+def spoken_text(text):
+    """The brand remains on slides; all speech uses its approved spoken alias."""
+    return re.sub(r"one\s*os", "系统", text, flags=re.IGNORECASE)
+
+
+def assign_sections(slides):
+    """Resolve directory hierarchy, independent from physical page numbering."""
+    directories = [s for s in slides if s["kind"] == "contents"]
+    if len(directories) != 1:
+        raise BuildError("必须有一个目录页，正文按目录章节编排")
+    titles = directories[0].get("bullets", [])
+    if not 1 <= len(titles) <= 3 or len(set(titles)) != len(titles) or any(not t.strip() for t in titles):
+        raise BuildError("目录须有 1 至 3 个不重复的章节")
+    current, last, covered = None, 0, set()
+    seen_directory = False
+    for slide in slides:
+        kind = slide["kind"]
+        if kind == "contents":
+            seen_directory = True
+        if kind not in {"chapter", "content", "metrics", "plan"}:
+            continue
+        if not seen_directory:
+            raise BuildError("章节和正文必须放在目录后")
+        if kind == "chapter" and "chapter_number" not in slide:
+            raise BuildError("章节页须明确指定 chapter_number")
+        number = slide.get("chapter_number", current)
+        if type(number) is not int or not 1 <= number <= len(titles):
+            raise BuildError("正文须指定 chapter_number 或继承前一章节；编号必须对应目录")
+        if number < last or number > last + 1:
+            raise BuildError("按目录章节顺序展开，不跳号或交错章节")
+        if kind == "chapter" and slide["title"] != titles[number-1]:
+            raise BuildError("章节页标题必须与对应目录一致")
+        if kind != "chapter":
+            covered.add(number)
+        current = last = number
+        slide["_chapter_number"] = number
+        slide["_chapter_title"] = titles[number-1]
+    if covered != set(range(1, len(titles)+1)):
+        raise BuildError("每个目录章节都须有正文，不能保留空章节")
 
 
 def digest(path):
@@ -168,6 +210,9 @@ def load_manifest(path):
                 if image.getexif().get(274, 1) != 1:
                     raise BuildError("截图含旋转 EXIF，请先规范方向后重新审查原像素坐标")
             shot["_source"] = source
+        if "narration" in slide:
+            slide["narration"] = spoken_text(slide["narration"])
+    assign_sections(slides)
     return data
 
 
@@ -261,7 +306,7 @@ class Renderer:
             self.centered(page, slide["title"], 800, 540, 152, "white")
             self.centered(page, slide.get("subtitle") or meta["date"], 1430, 260, 54, "#DAEEE4")
         elif kind == "chapter":
-            chapter_no = slide.get("chapter_number", 1)
+            chapter_no = slide["_chapter_number"]
             if chapter_no not in (1, 2, 3):
                 raise BuildError("chapter_number 仅支持 1、2、3")
             wordmark = self.assets / {1: "image12.png", 2: "image19.png", 3: "image21.png"}[chapter_no]
@@ -277,8 +322,8 @@ class Renderer:
         elif kind == "contents":
             d.text((105, 150), "CONTENTS", font=self.font(240), fill=GREEN)
             items = slide.get("bullets", [])
-            if not 1 <= len(items) <= 4:
-                raise BuildError("目录须有 1 至 4 项，更多章节请由 AI 归纳")
+            if not 1 <= len(items) <= 3:
+                raise BuildError("目录须有 1 至 3 项，更多章节请由 AI 归纳")
             width = 3100 // len(items)
             for i, item in enumerate(items):
                 x = 360 + i * width
@@ -287,7 +332,8 @@ class Renderer:
         else:
             self.block(page, f"羚牛 ONEOS · {meta['month']}", (95, 53, 2500, 100), 31, DARK)
             text_width = 1808 if shot_image else 3320
-            d.text((92, 430), f"{index:02}", font=self.font(105), fill=GREEN)
+            d.text((92, 430), f"{slide['_chapter_number']:02}", font=self.font(105), fill=GREEN)
+            self.block(page, slide["_chapter_title"], (310, 454, text_width-218, 100), 48, GREEN, 1.3)
             self.block(page, slide["title"], (92, 620, text_width, 315), 88, INK, 1.35)
             d.line((92, 985, 270, 985), fill=GREEN, width=6)
             status = slide.get("status", "")
@@ -358,7 +404,7 @@ def audio_page(slide, dest, draft, pause):
         raise BuildError("非目录页 narration 必填；不会按字数伪造语音时长")
     else:
         mp3 = dest.with_suffix(".tts.mp3")
-        asyncio.run(tts(slide["narration"], mp3))
+        asyncio.run(tts(spoken_text(slide["narration"]), mp3))
         measured = float(probe(mp3)["format"]["duration"])
         duration = math.ceil((measured + pause) * 30) / 30
         run(["ffmpeg", "-v", "error", "-y", "-i", mp3, "-af", f"apad=whole_dur={duration}", "-t", f"{duration:.8f}", "-ar", "48000", "-ac", "2", dest])
@@ -496,7 +542,7 @@ def build(manifest, output, no_audio=False, skip_video=False, assets=None, font=
     if not no_audio and data.get("narration_reviewed") is not True:
         raise BuildError("口播未完成脱敏审查：narration_reviewed 必须为 true；未向 TTS 发送文本")
     font_path = find_font(font)
-    all_text = "".join([data["title"], data["month"], data["date"]] + [str(s.get(k, "")) for s in data["slides"] for k in ("title", "subtitle", "status", "bullets", "metrics")])
+    all_text = "".join([data["title"], data["month"], data["date"]] + [str(s.get(k, "")) for s in data["slides"] for k in ("title", "subtitle", "status", "bullets", "metrics", "_chapter_title")])
     validate_glyphs(font_path, all_text + "羚牛月度汇报草稿无配音不可直接交付•")
     output.parent.mkdir(parents=True, exist_ok=True)
     assets_dir = Path(assets or Path(__file__).resolve().parents[1] / "assets")
@@ -522,6 +568,9 @@ def build(manifest, output, no_audio=False, skip_video=False, assets=None, font=
             entry = {"page": i, "kind": slide["kind"], "duration_seconds": duration, "speech_seconds": speech, "image_sha256": digest(pages[i-1]), "narration_sha256": hashlib.sha256(slide.get("narration", "").encode("utf-8")).hexdigest(), "image_bounds": slide.get("_image_bounds"), "redaction_count": len(slide.get("screenshot", {}).get("redactions", []))}
             if slide.get("screenshot"):
                 entry["sanitized_sha256"] = digest(work / "screenshots" / f"{i:02}.png")
+            if "_chapter_number" in slide:
+                entry["chapter_number"] = slide["_chapter_number"]
+                entry["chapter_title"] = slide["_chapter_title"]
             entries.append(entry)
         prefix = "DRAFT-" if no_audio else ""
         if data.get("max_duration_seconds") is not None and sum(durations) > data["max_duration_seconds"]:
