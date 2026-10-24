@@ -1,0 +1,5 @@
+Pillow>=10.0,<13
+python-pptx>=1.0,<2
+lxml>=5,<7
+fonttools>=4.50,<5
+edge-tts>=7.2,<8

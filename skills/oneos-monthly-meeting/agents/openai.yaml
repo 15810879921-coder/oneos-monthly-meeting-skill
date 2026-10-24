@@ -1,0 +1,7 @@
+interface:
+  display_name: "ONEOS 每月例会"
+  short_description: "从零散材料生成同风格例会 PPT、脱敏截图、女声配音与 4K 视频"
+  brand_color: "#006E49"
+  default_prompt: "使用 $oneos-monthly-meeting，把我提供的材料整理成本月例会 PPT、配音和视频，沿用既有风格并自动控制篇幅、打码敏感截图。"
+policy:
+  allow_implicit_invocation: true

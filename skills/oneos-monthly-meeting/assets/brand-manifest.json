@@ -1,0 +1,74 @@
+[
+  {
+    "file": "image1.jpeg",
+    "size": [
+      1921,
+      1081
+    ],
+    "sha256": "ef75c68d334a8d2289ca3577cced00fcf144c6d81fcf6423bdf5cbdab418007e",
+    "visual_review": "brand background/logo/chapter wordmark only; no business data"
+  },
+  {
+    "file": "image5.jpeg",
+    "size": [
+      1921,
+      1080
+    ],
+    "sha256": "2d930fe3aeceb5cb485acc1b01ea0292fb4557611321cd6aa0fce029d7b9515a",
+    "visual_review": "brand background/logo/chapter wordmark only; no business data"
+  },
+  {
+    "file": "image6.png",
+    "size": [
+      3989,
+      105
+    ],
+    "sha256": "186404bb7591ae2a49f3eb1e86ea1e3e949f466a548ae8ffa58245b44202b5d0",
+    "visual_review": "brand background/logo/chapter wordmark only; no business data"
+  },
+  {
+    "file": "image7.png",
+    "size": [
+      3227,
+      624
+    ],
+    "sha256": "71096b0b2fda4bf078ad242995f335014a846eeddf4d5446424ce24365feaaa3",
+    "visual_review": "brand background/logo/chapter wordmark only; no business data"
+  },
+  {
+    "file": "image8.png",
+    "size": [
+      1921,
+      1080
+    ],
+    "sha256": "60a5fcc853a06f9e0a3d726eac21fbea5894846d89f3717ee9bb14523a146033",
+    "visual_review": "brand background/logo/chapter wordmark only; no business data"
+  },
+  {
+    "file": "image12.png",
+    "size": [
+      1669,
+      558
+    ],
+    "sha256": "942850bd0a8e83400bc30edf66f53315b3cf88365b616b06e6c26dc3484f3e60",
+    "visual_review": "brand background/logo/chapter wordmark only; no business data"
+  },
+  {
+    "file": "image19.png",
+    "size": [
+      1792,
+      558
+    ],
+    "sha256": "4997511ed0fad9f83c6c515ef61a0a8f3d981485352f72b69b84a3b2ab665d5c",
+    "visual_review": "brand background/logo/chapter wordmark only; no business data"
+  },
+  {
+    "file": "image21.png",
+    "size": [
+      2776,
+      549
+    ],
+    "sha256": "06384126c2257bccb987b665795a8e8d41333ecc3777fd1b2d8ab18dce8e22ac",
+    "visual_review": "brand background/logo/chapter wordmark only; no business data"
+  }
+]
